@@ -1,75 +1,134 @@
-# React + TypeScript + Vite
+# Personal Finance Management Application - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the frontend client for the Personal Finance Management Application. It provides a responsive, intuitive interface for managing personal finances, tracking income and expenses, viewing trends, and organizing financial activities efficiently.
 
-Currently, two official plugins are available:
+## Technologies Used
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **React.js** (v19.2.8)
+- **TypeScript** (v6.0.2)
+- **Vite** (v8.2.2)
+- **Tailwind CSS** (v4.3.3)
+- **React Router** (v7.18.3)
+- **Axios** (v1.20.0)
+- **Lucide React** (v1.39.0)
+- **Recharts** (v3.10.1)
 
-## React Compiler
+## Prerequisites
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Node.js (v16+ recommended)
+- npm
+- The **Backend API** must be running to provide data and handle authentication.
 
-## Expanding the ESLint configuration
+## Installation
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. Clone the repository.
+2. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+3. Install the dependencies:
+   ```bash
+   npm install
+   ```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Environment Variables
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Create a `.env` file in the root of the `frontend` directory to configure the application.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- `VITE_API_BASE_URL`: The base URL pointing to the backend API server. This is used by Axios to automatically route all API requests.
 
+**Example `.env`:**
+```env
+VITE_API_BASE_URL=http://localhost:5000/api
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+## Backend Connection
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+The frontend connects to the backend through a globally configured Axios instance. The base URL is dynamically injected using the `VITE_API_BASE_URL` environment variable. Additionally, the Axios interceptor automatically attaches the user's JWT Bearer token to all outbound requests and handles global `401 Unauthorized` responses by gracefully logging the user out.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Running the Frontend
 
+Start the development server with hot-module replacement (HMR):
+```bash
+npm run dev
 ```
+
+Build the application for production:
+```bash
+npm run build
+```
+
+Preview the production build locally:
+```bash
+npm run preview
+```
+
+## Application Features
+
+| Feature | Description |
+|---------|-------------|
+| **Authentication** | Secure user registration, login, and automatic token management. |
+| **Dashboard** | An overview of finances featuring total income, total expenses, and current balance. |
+| **Time Periods** | Instantly filter dashboard metrics by "7 Days", "30 Days", or "All" time periods. |
+| **Financial Trends** | An interactive trend chart visualizing income vs. expenses over the selected period. |
+| **Transactions List** | A dedicated page and dashboard widget for browsing transaction history. |
+| **Search & Filtering** | Search transactions by *description*, and filter by category or type (Income/Expense). |
+| **Transaction Management** | Complete CRUD capabilities to create, view, edit, and delete transactions. |
+| **Responsive UI** | A fully mobile-friendly design built with Tailwind CSS. |
+
+## Application Routes
+
+| Route | Purpose | Access |
+|-------|---------|--------|
+| `/login` | User Login | Public |
+| `/register` | User Registration | Public |
+| `/dashboard` | Main Dashboard & Trends | Protected |
+| `/transactions` | Full Transaction History | Protected |
+
+*(Unrecognized routes automatically redirect to `/login`)*
+
+## Authentication Flow
+
+Authentication is handled via a centralized React Context (`AuthContext`). 
+1. Users register or log in via the public routes.
+2. On successful authentication, the backend returns a user profile and a **JWT**, which are stored securely in `localStorage`.
+3. The `ProtectedRoute` wrapper secures the `/dashboard` and `/transactions` routes. If a user attempts to access these without a valid token, they are redirected to `/login`.
+4. The `logout` function clears the stored credentials and redirects the user safely back to the login screen.
+
+## Validation & UX
+
+The application is built with a strong emphasis on user experience:
+- **Loading & Empty States:** Visual feedback is provided during network requests, and friendly empty states are shown when no transactions exist.
+- **Form Validation:** All inputs strictly validate required fields, correct numeric amounts (> 0), and valid date ranges.
+- **Old-Date Warnings:** Selecting a transaction date older than 365 days triggers a specialized warning/confirmation modal to prevent accidental data entry errors.
+- **API Error Handling:** A centralized error parser converts raw Axios errors into human-readable UI alerts.
+- **Delete Confirmation:** Users must explicitly confirm before a transaction is permanently deleted.
+
+## Project Structure
+
+```text
+frontend/
+├── package.json
+├── index.html
+├── vite.config.ts
+└── src/
+    ├── App.tsx                # Main application routing and configuration
+    ├── components/            # Reusable UI components (Modals, Cards, Charts)
+    ├── context/               # React Context providers (AuthContext)
+    ├── pages/                 # Full page views (Login, Dashboard, Transactions)
+    ├── services/              # API and backend communication (apiClient, transactionService)
+    └── types/                 # TypeScript interfaces and type definitions
+```
+
+## Documentation Links
+
+For detailed project documentation, please refer to the following SAGO Drive documents:
+
+- Requirement Analysis: [Google Drive Link]
+- Functional Requirements: [Google Drive Link]
+- Non Functional Requirements: [Google Drive Link]
+- Problem Analysis: [Google Drive Link]
+- System Architecture: [Google Drive Link]
+- Database Design: [Google Drive Link]
+- API Documentation: [Google Drive Link]
+- Flow Diagrams: [Google Drive Link]
