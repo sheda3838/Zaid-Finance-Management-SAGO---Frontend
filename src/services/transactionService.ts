@@ -10,3 +10,22 @@ export const getRecentTransactions = async (): Promise<Transaction[]> => {
   });
   return response.data;
 };
+
+export interface GetTransactionsParams {
+  search?: string;
+  type?: string;
+  category?: string;
+  sort?: string;
+}
+
+export const getTransactions = async (params?: GetTransactionsParams): Promise<Transaction[]> => {
+  // Filter out empty params so we don't send `search=""` or `category="All"` to the backend if the backend doesn't expect it.
+  const cleanParams: Record<string, string> = {};
+  if (params?.search) cleanParams.search = params.search;
+  if (params?.type && params.type !== 'all') cleanParams.type = params.type;
+  if (params?.category && params.category !== 'all') cleanParams.category = params.category;
+  if (params?.sort) cleanParams.sort = params.sort;
+
+  const response = await apiClient.get<Transaction[]>('/transactions', { params: cleanParams });
+  return response.data;
+};
