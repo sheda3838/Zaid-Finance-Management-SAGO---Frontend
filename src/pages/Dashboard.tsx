@@ -7,6 +7,7 @@ import type { DashboardPeriod, DashboardSummary, DashboardTrends } from '../type
 import SummaryCard from '../components/SummaryCard';
 import TrendChart from '../components/TrendChart';
 import PeriodFilter from '../components/PeriodFilter';
+import RecentTransactions from '../components/RecentTransactions';
 import axios from 'axios';
 
 const Dashboard: React.FC = () => {
@@ -145,13 +146,20 @@ const Dashboard: React.FC = () => {
               />
             </div>
 
-            {/* Trends Chart */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Income vs Expense Trends</h3>
-                <p className="text-sm text-gray-500">Visualizing your cash flow over the selected period.</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Trends Chart */}
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Income vs Expense Trends</h3>
+                  <p className="text-sm text-gray-500">Visualizing your cash flow over the selected period.</p>
+                </div>
+                <TrendChart data={trends.data} />
               </div>
-              <TrendChart data={trends.data} />
+
+              {/* Recent Transactions */}
+              <div className="lg:col-span-1 h-full">
+                <RecentTransactions />
+              </div>
             </div>
 
           </div>
