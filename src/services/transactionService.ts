@@ -47,3 +47,7 @@ export const updateTransaction = async (id: string, data: Partial<CreateTransact
   const response = await apiClient.patch<Transaction>(`/transactions/${id}`, data);
   return response.data;
 };
+
+export const deleteTransaction = async (id: string): Promise<void> => {
+  await apiClient.delete(`/transactions/${id}`);
+};

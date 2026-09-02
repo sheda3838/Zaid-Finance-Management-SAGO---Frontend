@@ -2,13 +2,14 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { LogOut, ArrowLeft, Receipt, Search, Filter, AlertCircle, Loader2, Plus, X } from 'lucide-react';
-import { getTransactions } from '../services/transactionService';
+import { getTransactions, deleteTransaction } from '../services/transactionService';
 import type { GetTransactionsParams } from '../services/transactionService';
 import type { Transaction } from '../types';
 import { IncomeCategories, ExpenseCategories } from '../types';
 import TransactionCard from '../components/TransactionCard';
 import TransactionModal from '../components/TransactionModal';
 import TransactionFormModal from '../components/TransactionFormModal';
+import ConfirmationModal from '../components/ConfirmationModal';
 import axios from 'axios';
 
 const Transactions: React.FC = () => {
@@ -18,6 +19,11 @@ const Transactions: React.FC = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
+  
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -75,6 +81,34 @@ const Transactions: React.FC = () => {
     setType('all');
     setCategory('all');
     setSort('newest');
+  };
+
+  const handleDelete = async () => {
+    if (!transactionToDelete) return;
+    setIsDeleting(true);
+    
+    // Find correct ID to use (id or _id fallback)
+    const id = transactionToDelete.id || transactionToDelete._id;
+    if (!id) {
+      setIsDeleting(false);
+      return;
+    }
+    
+    try {
+      await deleteTransaction(id);
+      setIsDeleteModalOpen(false);
+      setTransactionToDelete(null);
+      setRefreshTrigger(prev => prev + 1);
+    } catch (err) {
+      console.error('Failed to delete transaction:', err);
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data.message || 'Failed to delete transaction.');
+      } else {
+        setError('An unexpected error occurred.');
+      }
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -225,7 +259,15 @@ const Transactions: React.FC = () => {
               <TransactionCard 
                 key={tx.id || tx._id} 
                 transaction={tx} 
-                onClick={(t) => setSelectedTransaction(t)} 
+                onClick={(t) => setSelectedTransaction(t)}
+                onEdit={(t) => {
+                  setTransactionToEdit(t);
+                  setIsFormModalOpen(true);
+                }}
+                onDelete={(t) => {
+                  setTransactionToDelete(t);
+                  setIsDeleteModalOpen(true);
+                }}
               />
             ))}
           </div>
@@ -243,6 +285,11 @@ const Transactions: React.FC = () => {
             setIsFormModalOpen(true);
             setSelectedTransaction(null);
           }}
+          onDelete={() => {
+            setTransactionToDelete(selectedTransaction);
+            setIsDeleteModalOpen(true);
+            setSelectedTransaction(null);
+          }}
         />
       )}
 
@@ -255,6 +302,23 @@ const Transactions: React.FC = () => {
             setTransactionToEdit(null);
           }}
           onSuccess={() => setRefreshTrigger(prev => prev + 1)}
+        />
+      )}
+
+      {/* Confirmation Modal (Delete) */}
+      {isDeleteModalOpen && transactionToDelete && (
+        <ConfirmationModal
+          title="Delete Transaction?"
+          message="Are you sure you want to delete this transaction? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={handleDelete}
+          onCancel={() => {
+            setIsDeleteModalOpen(false);
+            setTransactionToDelete(null);
+          }}
+          isLoading={isDeleting}
+          isDanger={true}
         />
       )}
     </div>

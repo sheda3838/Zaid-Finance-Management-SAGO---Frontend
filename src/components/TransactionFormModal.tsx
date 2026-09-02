@@ -3,6 +3,7 @@ import { X, Loader2, AlertCircle } from 'lucide-react';
 import type { Transaction } from '../types';
 import { IncomeCategories, ExpenseCategories } from '../types';
 import { createTransaction, updateTransaction } from '../services/transactionService';
+import ConfirmationModal from './ConfirmationModal';
 import axios from 'axios';
 
 interface TransactionFormModalProps {
@@ -32,6 +33,7 @@ const TransactionFormModal: React.FC<TransactionFormModalProps> = ({ initialData
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
 
   // Close on Escape key
   useEffect(() => {
@@ -101,13 +103,26 @@ const TransactionFormModal: React.FC<TransactionFormModalProps> = ({ initialData
       return;
     }
 
+    const selectedDate = new Date(date);
+    const hundredYearsAgo = new Date();
+    hundredYearsAgo.setFullYear(hundredYearsAgo.getFullYear() - 100);
+
+    if (selectedDate < hundredYearsAgo) {
+      setIsWarningModalOpen(true);
+      return;
+    }
+
+    processSubmission();
+  };
+
+  const processSubmission = async () => {
     setIsSubmitting(true);
 
     try {
       const payload = {
         type,
         category,
-        amount: numAmount,
+        amount: parseFloat(amount),
         description: description.trim(),
         date
       };
@@ -270,6 +285,21 @@ const TransactionFormModal: React.FC<TransactionFormModalProps> = ({ initialData
           </button>
         </div>
       </div>
+
+      {isWarningModalOpen && (
+        <ConfirmationModal
+          title="Very Old Transaction Date"
+          message="This transaction date is unusually old. Please make sure the date is correct before continuing."
+          confirmText="Save"
+          cancelText="Edit"
+          onConfirm={() => {
+            setIsWarningModalOpen(false);
+            processSubmission();
+          }}
+          onCancel={() => setIsWarningModalOpen(false)}
+          isLoading={isSubmitting}
+        />
+      )}
     </div>
   );
 };

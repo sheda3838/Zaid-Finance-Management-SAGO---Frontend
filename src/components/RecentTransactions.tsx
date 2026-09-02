@@ -4,8 +4,12 @@ import { ArrowRight, Loader2, ReceiptText, TrendingUp, TrendingDown } from 'luci
 import { getRecentTransactions } from '../services/transactionService';
 import type { Transaction } from '../types';
 import axios from 'axios';
+interface RecentTransactionsProps {
+  refreshTrigger?: number;
+  onTransactionClick?: (transaction: Transaction) => void;
+}
 
-const RecentTransactions: React.FC = () => {
+const RecentTransactions: React.FC<RecentTransactionsProps> = ({ refreshTrigger = 0, onTransactionClick }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -28,7 +32,7 @@ const RecentTransactions: React.FC = () => {
     };
 
     fetchTransactions();
-  }, []);
+  }, [refreshTrigger]);
 
   const formatDate = (dateStr: string) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -81,7 +85,13 @@ const RecentTransactions: React.FC = () => {
       ) : (
         <div className="flex-1 flex flex-col gap-4">
           {transactions.map((tx) => (
-            <div key={tx.id || tx._id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors border border-transparent hover:border-gray-100">
+            <div 
+              key={tx.id || tx._id} 
+              onClick={() => onTransactionClick && onTransactionClick(tx)}
+              className={`flex items-center justify-between p-3 rounded-xl transition-colors border border-transparent ${
+                onTransactionClick ? 'cursor-pointer hover:bg-gray-50 hover:border-gray-100' : ''
+              }`}
+            >
               <div className="flex items-center gap-4">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                   tx.type === 'income' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'

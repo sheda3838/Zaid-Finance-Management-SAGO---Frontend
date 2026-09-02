@@ -6,9 +6,10 @@ interface TransactionModalProps {
   transaction: Transaction;
   onClose: () => void;
   onEdit: () => void;
+  onDelete: () => void;
 }
 
-const TransactionModal: React.FC<TransactionModalProps> = ({ transaction, onClose, onEdit }) => {
+const TransactionModal: React.FC<TransactionModalProps> = ({ transaction, onClose, onEdit, onDelete }) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Close on Escape key
@@ -152,6 +153,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ transaction, onClos
           </button>
           <button 
             type="button"
+            onClick={onDelete}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 transition-colors shadow-sm"
             aria-label="Delete transaction"
             title="Delete transaction"

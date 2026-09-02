@@ -3,11 +3,15 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogOut, LayoutDashboard, User, Wallet, TrendingUp, DollarSign, AlertCircle, Loader2, Receipt } from 'lucide-react';
 import { getSummary, getTrends } from '../services/dashboardService';
-import type { DashboardPeriod, DashboardSummary, DashboardTrends } from '../types';
+import { deleteTransaction } from '../services/transactionService';
+import type { Transaction, DashboardPeriod, DashboardSummary, DashboardTrends } from '../types';
 import SummaryCard from '../components/SummaryCard';
 import TrendChart from '../components/TrendChart';
 import PeriodFilter from '../components/PeriodFilter';
 import RecentTransactions from '../components/RecentTransactions';
+import TransactionModal from '../components/TransactionModal';
+import TransactionFormModal from '../components/TransactionFormModal';
+import ConfirmationModal from '../components/ConfirmationModal';
 import axios from 'axios';
 
 const Dashboard: React.FC = () => {
@@ -17,6 +21,16 @@ const Dashboard: React.FC = () => {
   const [period, setPeriod] = useState<DashboardPeriod>('all');
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [trends, setTrends] = useState<DashboardTrends | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  // Modal states
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
+  
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -47,11 +61,33 @@ const Dashboard: React.FC = () => {
     };
 
     fetchDashboardData();
-  }, [period]);
+  }, [period, refreshTrigger]);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleDelete = async () => {
+    if (!transactionToDelete) return;
+    setIsDeleting(true);
+    
+    const id = transactionToDelete.id || transactionToDelete._id;
+    if (!id) {
+      setIsDeleting(false);
+      return;
+    }
+    
+    try {
+      await deleteTransaction(id);
+      setIsDeleteModalOpen(false);
+      setTransactionToDelete(null);
+      setRefreshTrigger(prev => prev + 1);
+    } catch (err) {
+      console.error('Failed to delete transaction:', err);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const balance = summary ? summary.balance : 0;
@@ -158,7 +194,10 @@ const Dashboard: React.FC = () => {
 
               {/* Recent Transactions */}
               <div className="lg:col-span-1 h-full">
-                <RecentTransactions />
+                <RecentTransactions 
+                  refreshTrigger={refreshTrigger}
+                  onTransactionClick={setSelectedTransaction}
+                />
               </div>
             </div>
 
@@ -166,6 +205,53 @@ const Dashboard: React.FC = () => {
         )}
 
       </main>
+
+      {/* Transaction Modal */}
+      {selectedTransaction && (
+        <TransactionModal 
+          transaction={selectedTransaction} 
+          onClose={() => setSelectedTransaction(null)}
+          onEdit={() => {
+            setTransactionToEdit(selectedTransaction);
+            setIsFormModalOpen(true);
+            setSelectedTransaction(null);
+          }}
+          onDelete={() => {
+            setTransactionToDelete(selectedTransaction);
+            setIsDeleteModalOpen(true);
+            setSelectedTransaction(null);
+          }}
+        />
+      )}
+
+      {/* Transaction Form Modal (Create/Edit) */}
+      {isFormModalOpen && (
+        <TransactionFormModal 
+          initialData={transactionToEdit || undefined}
+          onClose={() => {
+            setIsFormModalOpen(false);
+            setTransactionToEdit(null);
+          }}
+          onSuccess={() => setRefreshTrigger(prev => prev + 1)}
+        />
+      )}
+
+      {/* Confirmation Modal (Delete) */}
+      {isDeleteModalOpen && transactionToDelete && (
+        <ConfirmationModal
+          title="Delete Transaction?"
+          message="Are you sure you want to delete this transaction? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={handleDelete}
+          onCancel={() => {
+            setIsDeleteModalOpen(false);
+            setTransactionToDelete(null);
+          }}
+          isLoading={isDeleting}
+          isDanger={true}
+        />
+      )}
     </div>
   );
 };

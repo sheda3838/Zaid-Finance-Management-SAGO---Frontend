@@ -1,13 +1,15 @@
 import React from 'react';
 import type { Transaction } from '../types';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, Pencil, Trash2 } from 'lucide-react';
 
 interface TransactionCardProps {
   transaction: Transaction;
   onClick?: (transaction: Transaction) => void;
+  onEdit?: (transaction: Transaction) => void;
+  onDelete?: (transaction: Transaction) => void;
 }
 
-const TransactionCard: React.FC<TransactionCardProps> = ({ transaction, onClick }) => {
+const TransactionCard: React.FC<TransactionCardProps> = ({ transaction, onClick, onEdit, onDelete }) => {
   const isIncome = transaction.type === 'income';
 
   const formatDate = (dateStr: string) => {
@@ -45,8 +47,43 @@ const TransactionCard: React.FC<TransactionCardProps> = ({ transaction, onClick 
           </div>
         </div>
       </div>
-      <div className={`font-bold text-lg ${isIncome ? 'text-emerald-600' : 'text-gray-900'}`}>
-        {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
+      <div className="flex items-center gap-4">
+        <div className={`font-bold text-lg ${isIncome ? 'text-emerald-600' : 'text-gray-900'}`}>
+          {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
+        </div>
+        
+        {(onEdit || onDelete) && (
+          <div className="flex items-center gap-1 border-l border-gray-200 pl-4">
+            {onEdit && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(transaction);
+                }}
+                className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                aria-label="Edit transaction"
+                title="Edit transaction"
+              >
+                <Pencil className="w-5 h-5" />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(transaction);
+                }}
+                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
+                aria-label="Delete transaction"
+                title="Delete transaction"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
