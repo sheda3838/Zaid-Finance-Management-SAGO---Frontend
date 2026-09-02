@@ -42,3 +42,8 @@ export const createTransaction = async (data: CreateTransactionData): Promise<Tr
   const response = await apiClient.post<Transaction>('/transactions', data);
   return response.data;
 };
+
+export const updateTransaction = async (id: string, data: Partial<CreateTransactionData>): Promise<Transaction> => {
+  const response = await apiClient.patch<Transaction>(`/transactions/${id}`, data);
+  return response.data;
+};

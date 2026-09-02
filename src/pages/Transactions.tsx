@@ -8,7 +8,7 @@ import type { Transaction } from '../types';
 import { IncomeCategories, ExpenseCategories } from '../types';
 import TransactionCard from '../components/TransactionCard';
 import TransactionModal from '../components/TransactionModal';
-import CreateTransactionModal from '../components/CreateTransactionModal';
+import TransactionFormModal from '../components/TransactionFormModal';
 import axios from 'axios';
 
 const Transactions: React.FC = () => {
@@ -16,7 +16,8 @@ const Transactions: React.FC = () => {
   
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -109,7 +110,7 @@ const Transactions: React.FC = () => {
             <p className="text-gray-500 mt-1">Manage and view your financial history.</p>
           </div>
           <button 
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => setIsFormModalOpen(true)}
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2"
           >
             <Plus className="w-5 h-5" />
@@ -236,14 +237,23 @@ const Transactions: React.FC = () => {
       {selectedTransaction && (
         <TransactionModal 
           transaction={selectedTransaction} 
-          onClose={() => setSelectedTransaction(null)} 
+          onClose={() => setSelectedTransaction(null)}
+          onEdit={() => {
+            setTransactionToEdit(selectedTransaction);
+            setIsFormModalOpen(true);
+            setSelectedTransaction(null);
+          }}
         />
       )}
 
-      {/* Create Transaction Modal */}
-      {isCreateModalOpen && (
-        <CreateTransactionModal 
-          onClose={() => setIsCreateModalOpen(false)}
+      {/* Transaction Form Modal (Create/Edit) */}
+      {isFormModalOpen && (
+        <TransactionFormModal 
+          initialData={transactionToEdit || undefined}
+          onClose={() => {
+            setIsFormModalOpen(false);
+            setTransactionToEdit(null);
+          }}
           onSuccess={() => setRefreshTrigger(prev => prev + 1)}
         />
       )}

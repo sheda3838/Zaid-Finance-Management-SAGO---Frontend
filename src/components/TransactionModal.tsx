@@ -5,9 +5,10 @@ import type { Transaction } from '../types';
 interface TransactionModalProps {
   transaction: Transaction;
   onClose: () => void;
+  onEdit: () => void;
 }
 
-const TransactionModal: React.FC<TransactionModalProps> = ({ transaction, onClose }) => {
+const TransactionModal: React.FC<TransactionModalProps> = ({ transaction, onClose, onEdit }) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Close on Escape key
@@ -141,6 +142,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ transaction, onClos
         <div className="px-6 py-4 bg-gray-50 flex items-center justify-end gap-3 rounded-b-2xl">
           <button 
             type="button"
+            onClick={onEdit}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-sm"
             aria-label="Edit transaction"
             title="Edit transaction"

@@ -1,22 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Loader2, AlertCircle } from 'lucide-react';
+import type { Transaction } from '../types';
 import { IncomeCategories, ExpenseCategories } from '../types';
-import { createTransaction } from '../services/transactionService';
+import { createTransaction, updateTransaction } from '../services/transactionService';
 import axios from 'axios';
 
-interface CreateTransactionModalProps {
+interface TransactionFormModalProps {
+  initialData?: Transaction;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ onClose, onSuccess }) => {
+const TransactionFormModal: React.FC<TransactionFormModalProps> = ({ initialData, onClose, onSuccess }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   
-  const [type, setType] = useState('');
-  const [category, setCategory] = useState('');
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const isEditMode = !!initialData;
+
+  const [type, setType] = useState(initialData?.type || '');
+  const [category, setCategory] = useState(initialData?.category || '');
+  const [amount, setAmount] = useState(initialData ? initialData.amount.toString() : '');
+  const [description, setDescription] = useState(initialData?.description || '');
+  
+  // Format the existing date to YYYY-MM-DD for the date input if editing
+  const getInitialDate = () => {
+    if (initialData?.date) {
+      return new Date(initialData.date).toISOString().split('T')[0];
+    }
+    return new Date().toISOString().split('T')[0];
+  };
+  const [date, setDate] = useState(getInitialDate());
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -46,7 +58,15 @@ const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ onClose
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newType = e.target.value;
     setType(newType);
-    setCategory(''); // Reset category when type changes
+    
+    // Reset category if it's incompatible with the new type
+    let allowedCategories: string[] = [];
+    if (newType === 'income') allowedCategories = [...IncomeCategories];
+    else if (newType === 'expense') allowedCategories = [...ExpenseCategories];
+    
+    if (category && !allowedCategories.includes(category)) {
+      setCategory('');
+    }
   };
 
   const availableCategories = type === 'income' ? IncomeCategories : type === 'expense' ? ExpenseCategories : [];
@@ -84,19 +104,29 @@ const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ onClose
     setIsSubmitting(true);
 
     try {
-      await createTransaction({
+      const payload = {
         type,
         category,
         amount: numAmount,
         description: description.trim(),
         date
-      });
+      };
+
+      if (isEditMode && initialData) {
+        // Find correct ID to use (id or _id fallback)
+        const id = initialData.id || initialData._id;
+        if (!id) throw new Error('Transaction ID missing.');
+        await updateTransaction(id, payload);
+      } else {
+        await createTransaction(payload);
+      }
+      
       onSuccess();
       onClose();
     } catch (err) {
-      console.error('Failed to create transaction:', err);
+      console.error(`Failed to ${isEditMode ? 'update' : 'create'} transaction:`, err);
       if (axios.isAxiosError(err) && err.response) {
-        setError(err.response.data.message || 'Failed to create transaction.');
+        setError(err.response.data.message || `Failed to ${isEditMode ? 'update' : 'create'} transaction.`);
       } else {
         setError('An unexpected error occurred.');
       }
@@ -117,7 +147,9 @@ const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ onClose
         aria-labelledby="modal-title"
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
-          <h2 id="modal-title" className="text-xl font-bold text-gray-900">Create Transaction</h2>
+          <h2 id="modal-title" className="text-xl font-bold text-gray-900">
+            {isEditMode ? 'Edit Transaction' : 'Create Transaction'}
+          </h2>
           <button 
             type="button"
             onClick={onClose}
@@ -137,7 +169,7 @@ const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ onClose
             </div>
           )}
 
-          <form id="create-transaction-form" onSubmit={handleSubmit} className="space-y-5">
+          <form id="transaction-form" onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5" htmlFor="type">Transaction Type <span className="text-red-500">*</span></label>
               <select
@@ -223,17 +255,17 @@ const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ onClose
           </button>
           <button 
             type="submit"
-            form="create-transaction-form"
+            form="transaction-form"
             disabled={isSubmitting}
             className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-sm disabled:opacity-50"
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Creating...
+                {isEditMode ? 'Saving...' : 'Creating...'}
               </>
             ) : (
-              'Create Transaction'
+              isEditMode ? 'Save Changes' : 'Create Transaction'
             )}
           </button>
         </div>
@@ -242,4 +274,4 @@ const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ onClose
   );
 };
 
-export default CreateTransactionModal;
+export default TransactionFormModal;
