@@ -7,12 +7,14 @@ import type { GetTransactionsParams } from '../services/transactionService';
 import type { Transaction } from '../types';
 import { IncomeCategories, ExpenseCategories } from '../types';
 import TransactionCard from '../components/TransactionCard';
+import TransactionModal from '../components/TransactionModal';
 import axios from 'axios';
 
 const Transactions: React.FC = () => {
   const { logout } = useAuth();
   
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -216,13 +218,21 @@ const Transactions: React.FC = () => {
               <TransactionCard 
                 key={tx.id || tx._id} 
                 transaction={tx} 
-                onClick={() => console.log('Transaction clicked:', tx.id)} 
+                onClick={(t) => setSelectedTransaction(t)} 
               />
             ))}
           </div>
         )}
 
       </main>
+
+      {/* Transaction Modal */}
+      {selectedTransaction && (
+        <TransactionModal 
+          transaction={selectedTransaction} 
+          onClose={() => setSelectedTransaction(null)} 
+        />
+      )}
     </div>
   );
 };

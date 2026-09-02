@@ -34,4 +34,5 @@ export interface Transaction {
   description?: string;
   date: string;
   createdAt: string;
+  updatedAt?: string;
 }
