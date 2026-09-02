@@ -38,6 +38,7 @@ Create a `.env` file in the root of the `frontend` directory to configure the ap
 - `VITE_API_BASE_URL`: The base URL pointing to the backend API server. This is used by Axios to automatically route all API requests.
 
 **Example `.env`:**
+
 ```env
 VITE_API_BASE_URL=http://localhost:5000/api
 ```
@@ -49,47 +50,51 @@ The frontend connects to the backend through a globally configured Axios instanc
 ## Running the Frontend
 
 Start the development server with hot-module replacement (HMR):
+
 ```bash
 npm run dev
 ```
 
 Build the application for production:
+
 ```bash
 npm run build
 ```
 
 Preview the production build locally:
+
 ```bash
 npm run preview
 ```
 
 ## Application Features
 
-| Feature | Description |
-|---------|-------------|
-| **Authentication** | Secure user registration, login, and automatic token management. |
-| **Dashboard** | An overview of finances featuring total income, total expenses, and current balance. |
-| **Time Periods** | Instantly filter dashboard metrics by "7 Days", "30 Days", or "All" time periods. |
-| **Financial Trends** | An interactive trend chart visualizing income vs. expenses over the selected period. |
-| **Transactions List** | A dedicated page and dashboard widget for browsing transaction history. |
-| **Search & Filtering** | Search transactions by *description*, and filter by category or type (Income/Expense). |
-| **Transaction Management** | Complete CRUD capabilities to create, view, edit, and delete transactions. |
-| **Responsive UI** | A fully mobile-friendly design built with Tailwind CSS. |
+| Feature                    | Description                                                                            |
+| -------------------------- | -------------------------------------------------------------------------------------- |
+| **Authentication**         | Secure user registration, login, and automatic token management.                       |
+| **Dashboard**              | An overview of finances featuring total income, total expenses, and current balance.   |
+| **Time Periods**           | Instantly filter dashboard metrics by "7 Days", "30 Days", or "All" time periods.      |
+| **Financial Trends**       | An interactive trend chart visualizing income vs. expenses over the selected period.   |
+| **Transactions List**      | A dedicated page and dashboard widget for browsing transaction history.                |
+| **Search & Filtering**     | Search transactions by _description_, and filter by category or type (Income/Expense). |
+| **Transaction Management** | Complete CRUD capabilities to create, view, edit, and delete transactions.             |
+| **Responsive UI**          | A fully mobile-friendly design built with Tailwind CSS.                                |
 
 ## Application Routes
 
-| Route | Purpose | Access |
-|-------|---------|--------|
-| `/login` | User Login | Public |
-| `/register` | User Registration | Public |
-| `/dashboard` | Main Dashboard & Trends | Protected |
+| Route           | Purpose                  | Access    |
+| --------------- | ------------------------ | --------- |
+| `/login`        | User Login               | Public    |
+| `/register`     | User Registration        | Public    |
+| `/dashboard`    | Main Dashboard & Trends  | Protected |
 | `/transactions` | Full Transaction History | Protected |
 
-*(Unrecognized routes automatically redirect to `/login`)*
+_(Unrecognized routes automatically redirect to `/login`)_
 
 ## Authentication Flow
 
-Authentication is handled via a centralized React Context (`AuthContext`). 
+Authentication is handled via a centralized React Context (`AuthContext`).
+
 1. Users register or log in via the public routes.
 2. On successful authentication, the backend returns a user profile and a **JWT**, which are stored securely in `localStorage`.
 3. The `ProtectedRoute` wrapper secures the `/dashboard` and `/transactions` routes. If a user attempts to access these without a valid token, they are redirected to `/login`.
@@ -98,6 +103,7 @@ Authentication is handled via a centralized React Context (`AuthContext`).
 ## Validation & UX
 
 The application is built with a strong emphasis on user experience:
+
 - **Loading & Empty States:** Visual feedback is provided during network requests, and friendly empty states are shown when no transactions exist.
 - **Form Validation:** All inputs strictly validate required fields, correct numeric amounts (> 0), and valid date ranges.
 - **Old-Date Warnings:** Selecting a transaction date older than 365 days triggers a specialized warning/confirmation modal to prevent accidental data entry errors.
@@ -122,12 +128,12 @@ frontend/
 
 ## Documentation
 
-| Document | Link |
-|----------|------|
-| Requirement Analysis | [View Document](https://drive.google.com/file/d/1czd4oegahKemJ-k9XuJNfwquQYsogE9r/view?usp=sharing) |
-| Functional Requirements | [View Document](https://drive.google.com/file/d/1ChIJqadF76e126xwj1uhUXvjQ0T-hB-b/view?usp=sharing) |
-| Non Functional Requirements | [View Document](https://drive.google.com/file/d/1ChIJqadF76e126xwj1uhUXvjQ0T-hB-b/view?usp=sharing) |
-| Problem Analysis | [View Document](https://drive.google.com/file/d/1lUPShsE2vqiRr4vmOwAsjqNBdkf5wCYz/view?usp=sharing) |
-| API Documentation | [View Document](https://drive.google.com/file/d/1ChIJqadF76e126xwj1uhUXvjQ0T-hB-b/view?usp=sharing) |
-| System Architecture | [View Diagram](https://drive.google.com/file/d/1UoyZrus6nmlRQK7pTEa7nDxhRS4DqGCL/view?usp=sharing) |
-| Database Design | [View Diagram](https://drive.google.com/file/d/1nrAejrDzX1Bnmgr9yVf2DjQggGVsfWne/view?usp=sharing) |
+| Document                    | Link                                                                                                |
+| --------------------------- | --------------------------------------------------------------------------------------------------- |
+| Requirement Analysis        | [View Document](https://drive.google.com/file/d/1czd4oegahKemJ-k9XuJNfwquQYsogE9r/view?usp=sharing) |
+| Functional Requirements     | [View Document](https://drive.google.com/file/d/1ChIJqadF76e126xwj1uhUXvjQ0T-hB-b/view?usp=sharing) |
+| Non Functional Requirements | [View Document](https://drive.google.com/file/d/13lklvp5YA07LLy_QJg2Cmu9qvUihk2VH/view?usp=sharing) |
+| Problem Analysis            | [View Document](https://drive.google.com/file/d/1lUPShsE2vqiRr4vmOwAsjqNBdkf5wCYz/view?usp=sharing) |
+| API Documentation           | [View Document](https://drive.google.com/file/d/1RPHHVjSIPDQDkfgYoNUZB6RrLv7X7r0q/view?usp=sharing) |
+| System Architecture         | [View Diagram](https://drive.google.com/file/d/1UoyZrus6nmlRQK7pTEa7nDxhRS4DqGCL/view?usp=sharing)  |
+| Database Design             | [View Diagram](https://drive.google.com/file/d/1nrAejrDzX1Bnmgr9yVf2DjQggGVsfWne/view?usp=sharing)  |
