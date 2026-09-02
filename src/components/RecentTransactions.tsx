@@ -7,9 +7,10 @@ import axios from 'axios';
 interface RecentTransactionsProps {
   refreshTrigger?: number;
   onTransactionClick?: (transaction: Transaction) => void;
+  onAddClick?: () => void;
 }
 
-const RecentTransactions: React.FC<RecentTransactionsProps> = ({ refreshTrigger = 0, onTransactionClick }) => {
+const RecentTransactions: React.FC<RecentTransactionsProps> = ({ refreshTrigger = 0, onTransactionClick, onAddClick }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -79,8 +80,16 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ refreshTrigger 
           <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3">
             <ReceiptText className="w-6 h-6 text-gray-400" />
           </div>
-          <p className="text-gray-900 font-medium mb-1">No recent transactions</p>
-          <p className="text-gray-500 text-sm">Your latest activity will appear here.</p>
+          <p className="text-gray-900 font-medium mb-1">No transactions yet.</p>
+          <p className="text-gray-500 text-sm mb-4">Your latest activity will appear here.</p>
+          {onAddClick && (
+            <button
+              onClick={onAddClick}
+              className="text-sm font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-lg transition-colors"
+            >
+              Add Transaction
+            </button>
+          )}
         </div>
       ) : (
         <div className="flex-1 flex flex-col gap-4">
@@ -99,7 +108,7 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ refreshTrigger 
                   {tx.type === 'income' ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{tx.description}</p>
+                  <p className="font-medium text-gray-900 truncate max-w-[150px] sm:max-w-[200px]">{tx.title || 'Untitled Transaction'}</p>
                   <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
                     <span className="capitalize bg-gray-100 px-2 py-0.5 rounded-md">{tx.category}</span>
                     <span>•</span>

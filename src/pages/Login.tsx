@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import { parseApiError } from '../services/apiClient';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -38,11 +38,7 @@ const Login: React.FC = () => {
       await login({ email, password });
       navigate('/dashboard');
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response) {
-        setError(err.response.data.message || 'Failed to login. Please check your credentials.');
-      } else {
-        setError('An unexpected error occurred. Please try again.');
-      }
+      setError(parseApiError(err, 'Failed to login. Please check your credentials.'));
     } finally {
       setIsLoading(false);
     }

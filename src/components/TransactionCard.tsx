@@ -32,23 +32,23 @@ const TransactionCard: React.FC<TransactionCardProps> = ({ transaction, onClick,
       onClick={() => onClick && onClick(transaction)}
       className="flex items-center justify-between p-4 bg-white hover:bg-gray-50 rounded-2xl transition-all shadow-sm border border-gray-100 cursor-pointer hover:shadow-md"
     >
-      <div className="flex items-center gap-4">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+      <div className="flex items-center gap-4 min-w-0 flex-1 pr-4">
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
           isIncome ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
         }`}>
           {isIncome ? <TrendingUp className="w-6 h-6" /> : <TrendingDown className="w-6 h-6" />}
         </div>
-        <div>
-          <p className="font-semibold text-gray-900 text-lg">{transaction.description || 'Untitled Transaction'}</p>
-          <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-            <span className="capitalize bg-gray-100 px-2 py-0.5 rounded-md font-medium text-gray-600">{transaction.category}</span>
-            <span>•</span>
-            <span>{formatDate(transaction.date)}</span>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-gray-900 text-lg truncate">{transaction.title || 'Untitled Transaction'}</p>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-500 mt-1">
+            <span className="capitalize bg-gray-100 px-2 py-0.5 rounded-md font-medium text-gray-600 whitespace-nowrap">{transaction.category}</span>
+            <span className="text-gray-400">•</span>
+            <span className="whitespace-nowrap">{formatDate(transaction.date)}</span>
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-4">
-        <div className={`font-bold text-lg ${isIncome ? 'text-emerald-600' : 'text-gray-900'}`}>
+      <div className="flex items-center gap-4 flex-shrink-0">
+        <div className={`font-bold text-lg whitespace-nowrap ${isIncome ? 'text-emerald-600' : 'text-gray-900'}`}>
           {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
         </div>
         

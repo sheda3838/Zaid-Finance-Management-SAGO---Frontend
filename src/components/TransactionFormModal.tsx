@@ -4,7 +4,7 @@ import type { Transaction } from '../types';
 import { IncomeCategories, ExpenseCategories } from '../types';
 import { createTransaction, updateTransaction } from '../services/transactionService';
 import ConfirmationModal from './ConfirmationModal';
-import axios from 'axios';
+import { parseApiError } from '../services/apiClient';
 
 interface TransactionFormModalProps {
   initialData?: Transaction;
@@ -17,6 +17,7 @@ const TransactionFormModal: React.FC<TransactionFormModalProps> = ({ initialData
   
   const isEditMode = !!initialData;
 
+  const [title, setTitle] = useState(initialData?.title || '');
   const [type, setType] = useState(initialData?.type || '');
   const [category, setCategory] = useState(initialData?.category || '');
   const [amount, setAmount] = useState(initialData ? initialData.amount.toString() : '');
@@ -81,6 +82,15 @@ const TransactionFormModal: React.FC<TransactionFormModalProps> = ({ initialData
     setError('');
 
     // Frontend Validation
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      setError('Please enter a title.');
+      return;
+    }
+    if (trimmedTitle.length > 100) {
+      setError('Title cannot exceed 100 characters.');
+      return;
+    }
     if (!type) {
       setError('Please select a transaction type.');
       return;
@@ -120,6 +130,7 @@ const TransactionFormModal: React.FC<TransactionFormModalProps> = ({ initialData
 
     try {
       const payload = {
+        title: title.trim(),
         type,
         category,
         amount: parseFloat(amount),
@@ -138,13 +149,9 @@ const TransactionFormModal: React.FC<TransactionFormModalProps> = ({ initialData
       
       onSuccess();
       onClose();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(`Failed to ${isEditMode ? 'update' : 'create'} transaction:`, err);
-      if (axios.isAxiosError(err) && err.response) {
-        setError(err.response.data.message || `Failed to ${isEditMode ? 'update' : 'create'} transaction.`);
-      } else {
-        setError('An unexpected error occurred.');
-      }
+      setError(parseApiError(err, `Failed to ${isEditMode ? 'update' : 'create'} transaction.`));
       setIsSubmitting(false);
     }
   };
@@ -186,12 +193,26 @@ const TransactionFormModal: React.FC<TransactionFormModalProps> = ({ initialData
 
           <form id="transaction-form" onSubmit={handleSubmit} className="space-y-5">
             <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5" htmlFor="title">Title <span className="text-red-500">*</span></label>
+              <input
+                id="title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Grocery Shopping"
+                maxLength={100}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-white text-sm"
+                required
+              />
+            </div>
+
+            <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5" htmlFor="type">Transaction Type <span className="text-red-500">*</span></label>
               <select
                 id="type"
                 value={type}
                 onChange={handleTypeChange}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-white"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-white text-sm cursor-pointer"
                 required
               >
                 <option value="" disabled>Select Type</option>
@@ -207,7 +228,7 @@ const TransactionFormModal: React.FC<TransactionFormModalProps> = ({ initialData
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 disabled={!type}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-white disabled:bg-gray-100 disabled:text-gray-500"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-white text-sm cursor-pointer disabled:bg-gray-100 disabled:text-gray-500"
                 required
               >
                 <option value="" disabled>Select Category</option>
@@ -227,7 +248,7 @@ const TransactionFormModal: React.FC<TransactionFormModalProps> = ({ initialData
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-white"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-white text-sm"
                 required
               />
             </div>
@@ -240,7 +261,7 @@ const TransactionFormModal: React.FC<TransactionFormModalProps> = ({ initialData
                 max={maxDate}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-white"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-white text-sm cursor-pointer"
                 required
               />
             </div>
@@ -253,7 +274,7 @@ const TransactionFormModal: React.FC<TransactionFormModalProps> = ({ initialData
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="What was this for?"
                 rows={3}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-white resize-none"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-white text-sm resize-none"
               ></textarea>
             </div>
           </form>
@@ -296,7 +317,10 @@ const TransactionFormModal: React.FC<TransactionFormModalProps> = ({ initialData
             setIsWarningModalOpen(false);
             processSubmission();
           }}
-          onCancel={() => setIsWarningModalOpen(false)}
+          onCancel={() => {
+            setIsWarningModalOpen(false);
+            setTimeout(() => document.getElementById('date')?.focus(), 50);
+          }}
           isLoading={isSubmitting}
         />
       )}

@@ -98,10 +98,14 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ transaction, onClos
               {isIncome ? <TrendingUp className="w-7 h-7" /> : <TrendingDown className="w-7 h-7" />}
             </div>
             <div>
-              <p className={`text-2xl font-bold ${isIncome ? 'text-emerald-600' : 'text-gray-900'}`}>
-                {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
-              </p>
-              <p className="text-gray-500 font-medium capitalize">{transaction.type}</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">{transaction.title || 'Untitled Transaction'}</h3>
+              <div className="flex items-center gap-3">
+                <p className={`text-xl font-bold ${isIncome ? 'text-emerald-600' : 'text-gray-900'}`}>
+                  {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
+                </p>
+                <span className="text-gray-300">•</span>
+                <p className="text-gray-500 font-medium capitalize">{transaction.type}</p>
+              </div>
             </div>
           </div>
 

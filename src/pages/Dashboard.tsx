@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, LayoutDashboard, User, Wallet, TrendingUp, DollarSign, AlertCircle, Loader2, Receipt } from 'lucide-react';
+import { LogOut, LayoutDashboard, User, Wallet, TrendingUp, DollarSign, AlertCircle, Receipt } from 'lucide-react';
 import { getSummary, getTrends } from '../services/dashboardService';
 import { deleteTransaction } from '../services/transactionService';
 import type { Transaction, DashboardPeriod, DashboardSummary, DashboardTrends } from '../types';
@@ -12,7 +12,7 @@ import RecentTransactions from '../components/RecentTransactions';
 import TransactionModal from '../components/TransactionModal';
 import TransactionFormModal from '../components/TransactionFormModal';
 import ConfirmationModal from '../components/ConfirmationModal';
-import axios from 'axios';
+import { parseApiError } from '../services/apiClient';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -48,13 +48,9 @@ const Dashboard: React.FC = () => {
         
         setSummary(summaryData);
         setTrends(trendsData);
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('Failed to fetch dashboard data:', err);
-        if (axios.isAxiosError(err) && err.response) {
-          setError(err.response.data.message || 'Failed to load dashboard data.');
-        } else {
-          setError('An unexpected error occurred while loading your dashboard.');
-        }
+        setError(parseApiError(err, 'Failed to load your dashboard data.'));
       } finally {
         setIsLoading(false);
       }
@@ -102,7 +98,7 @@ const Dashboard: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-6">
-          <Link to="/transactions" className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors">
+          <Link to="/transactions" className="hidden sm:flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors">
             <Receipt className="w-4 h-4" />
             Transactions
           </Link>
@@ -112,7 +108,7 @@ const Dashboard: React.FC = () => {
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-red-600 transition-colors"
+            className="hidden sm:flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-red-600 transition-colors"
           >
             <LogOut className="w-4 h-4" />
             Sign Out
@@ -144,11 +140,24 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Loading State */}
+        {/* Loading State Skeleton */}
         {isLoading && !summary && (
-          <div className="flex-1 flex flex-col items-center justify-center py-20">
-            <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mb-4" />
-            <p className="text-gray-500 font-medium">Loading your financial data...</p>
+          <div className="flex flex-col gap-6 animate-pulse">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5">
+                  <div className="w-14 h-14 rounded-xl bg-gray-100"></div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-gray-100 rounded w-1/2 mb-3"></div>
+                    <div className="h-6 bg-gray-100 rounded w-3/4"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2 h-80"></div>
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-1 h-80"></div>
+            </div>
           </div>
         )}
 
@@ -197,6 +206,7 @@ const Dashboard: React.FC = () => {
                 <RecentTransactions 
                   refreshTrigger={refreshTrigger}
                   onTransactionClick={setSelectedTransaction}
+                  onAddClick={() => setIsFormModalOpen(true)}
                 />
               </div>
             </div>
@@ -205,6 +215,25 @@ const Dashboard: React.FC = () => {
         )}
 
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex items-center justify-around z-20 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <Link to="/dashboard" className="flex flex-col items-center py-3 text-indigo-600 w-full hover:bg-gray-50 transition-colors">
+          <LayoutDashboard className="w-6 h-6 mb-1" />
+          <span className="text-xs font-medium">Home</span>
+        </Link>
+        <Link to="/transactions" className="flex flex-col items-center py-3 text-gray-500 hover:text-indigo-600 w-full hover:bg-gray-50 transition-colors">
+          <Receipt className="w-6 h-6 mb-1" />
+          <span className="text-xs font-medium">Transactions</span>
+        </Link>
+        <button onClick={handleLogout} className="flex flex-col items-center py-3 text-gray-500 hover:text-red-600 w-full hover:bg-gray-50 transition-colors">
+          <LogOut className="w-6 h-6 mb-1" />
+          <span className="text-xs font-medium">Sign Out</span>
+        </button>
+      </nav>
+      
+      {/* Padding for mobile nav */}
+      <div className="h-16 sm:hidden"></div>
 
       {/* Transaction Modal */}
       {selectedTransaction && (

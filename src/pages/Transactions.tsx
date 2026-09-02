@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
-import { LogOut, ArrowLeft, Receipt, Search, Filter, AlertCircle, Loader2, Plus, X } from 'lucide-react';
+import { LogOut, ArrowLeft, Receipt, Search, Filter, AlertCircle, Plus, X, LayoutDashboard } from 'lucide-react';
 import { getTransactions, deleteTransaction } from '../services/transactionService';
 import type { GetTransactionsParams } from '../services/transactionService';
 import type { Transaction } from '../types';
@@ -10,7 +10,7 @@ import TransactionCard from '../components/TransactionCard';
 import TransactionModal from '../components/TransactionModal';
 import TransactionFormModal from '../components/TransactionFormModal';
 import ConfirmationModal from '../components/ConfirmationModal';
-import axios from 'axios';
+import { parseApiError } from '../services/apiClient';
 
 const Transactions: React.FC = () => {
   const { logout } = useAuth();
@@ -54,13 +54,9 @@ const Transactions: React.FC = () => {
         };
         const data = await getTransactions(params);
         setTransactions(data);
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('Failed to fetch transactions:', err);
-        if (axios.isAxiosError(err) && err.response) {
-          setError(err.response.data.message || 'Failed to load transactions.');
-        } else {
-          setError('An unexpected error occurred.');
-        }
+        setError(parseApiError(err, 'Failed to load transactions.'));
       } finally {
         setIsLoading(false);
       }
@@ -99,13 +95,9 @@ const Transactions: React.FC = () => {
       setIsDeleteModalOpen(false);
       setTransactionToDelete(null);
       setRefreshTrigger(prev => prev + 1);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Failed to delete transaction:', err);
-      if (axios.isAxiosError(err) && err.response) {
-        setError(err.response.data.message || 'Failed to delete transaction.');
-      } else {
-        setError('An unexpected error occurred.');
-      }
+      setError(parseApiError(err, 'Failed to delete transaction.'));
     } finally {
       setIsDeleting(false);
     }
@@ -121,16 +113,16 @@ const Transactions: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-6">
-          <Link to="/dashboard" className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors">
+          <Link to="/dashboard" className="hidden sm:flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Back to Dashboard</span>
+            <span>Back to Dashboard</span>
           </Link>
           <button
             onClick={logout}
-            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-red-600 transition-colors"
+            className="hidden sm:flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-red-600 transition-colors"
           >
             <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline">Sign Out</span>
+            <span>Sign Out</span>
           </button>
         </div>
       </nav>
@@ -180,7 +172,7 @@ const Transactions: React.FC = () => {
                   setCategory('all');
                 }
               }}
-              className="py-2.5 px-4 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-gray-50 focus:bg-white text-gray-700 w-full sm:w-auto"
+              className="py-2.5 px-4 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-gray-50 focus:bg-white text-gray-700 w-full sm:w-auto truncate text-sm cursor-pointer"
             >
               <option value="all">All Types</option>
               <option value="income">Income</option>
@@ -190,7 +182,7 @@ const Transactions: React.FC = () => {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="py-2.5 px-4 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-gray-50 focus:bg-white text-gray-700 w-full sm:w-auto max-w-[200px]"
+              className="py-2.5 px-4 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-gray-50 focus:bg-white text-gray-700 w-full sm:w-auto sm:max-w-[200px] truncate text-sm cursor-pointer"
             >
               <option value="all">All Categories</option>
               {availableCategories.map(cat => (
@@ -201,7 +193,7 @@ const Transactions: React.FC = () => {
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
-              className="py-2.5 px-4 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-gray-50 focus:bg-white text-gray-700 w-full sm:w-auto"
+              className="py-2.5 px-4 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-gray-50 focus:bg-white text-gray-700 w-full sm:w-auto truncate text-sm cursor-pointer"
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
@@ -229,11 +221,21 @@ const Transactions: React.FC = () => {
           </div>
         )}
 
-        {/* Loading / Content */}
+        {/* Loading State Skeleton */}
         {isLoading ? (
-          <div className="flex-1 flex flex-col items-center justify-center py-20">
-            <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mb-4" />
-            <p className="text-gray-500 font-medium">Loading transactions...</p>
+          <div className="flex flex-col gap-4 animate-pulse pb-10">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border border-gray-100">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gray-100"></div>
+                  <div>
+                    <div className="h-5 bg-gray-100 rounded w-40 mb-2"></div>
+                    <div className="h-4 bg-gray-100 rounded w-24"></div>
+                  </div>
+                </div>
+                <div className="h-6 bg-gray-100 rounded w-20"></div>
+              </div>
+            ))}
           </div>
         ) : !error && transactions.length === 0 ? (
           <div className="flex-1 bg-white border border-gray-200 border-dashed rounded-2xl flex flex-col items-center justify-center py-20 px-4 text-center shadow-sm">
@@ -274,6 +276,25 @@ const Transactions: React.FC = () => {
         )}
 
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex items-center justify-around z-20 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <Link to="/dashboard" className="flex flex-col items-center py-3 text-gray-500 hover:text-indigo-600 w-full hover:bg-gray-50 transition-colors">
+          <LayoutDashboard className="w-6 h-6 mb-1" />
+          <span className="text-xs font-medium">Home</span>
+        </Link>
+        <Link to="/transactions" className="flex flex-col items-center py-3 text-indigo-600 w-full hover:bg-gray-50 transition-colors">
+          <Receipt className="w-6 h-6 mb-1" />
+          <span className="text-xs font-medium">Transactions</span>
+        </Link>
+        <button onClick={logout} className="flex flex-col items-center py-3 text-gray-500 hover:text-red-600 w-full hover:bg-gray-50 transition-colors">
+          <LogOut className="w-6 h-6 mb-1" />
+          <span className="text-xs font-medium">Sign Out</span>
+        </button>
+      </nav>
+      
+      {/* Padding for mobile nav */}
+      <div className="h-16 sm:hidden"></div>
 
       {/* Transaction Modal */}
       {selectedTransaction && (

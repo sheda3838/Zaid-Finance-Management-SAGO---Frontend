@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import { parseApiError } from '../services/apiClient';
 
 const Register: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +33,7 @@ const Register: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !confirmPassword) {
       setError('Please fill in all fields.');
       return;
     }
@@ -46,16 +48,17 @@ const Register: React.FC = () => {
       return;
     }
 
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
     setIsLoading(true);
     try {
       await register({ name, email, password });
       navigate('/dashboard');
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response) {
-        setError(err.response.data.message || 'Failed to register. Please try again.');
-      } else {
-        setError('An unexpected error occurred. Please try again.');
-      }
+      setError(parseApiError(err, 'Failed to register. Please try again.'));
     } finally {
       setIsLoading(false);
     }
@@ -135,6 +138,31 @@ const Register: React.FC = () => {
                 disabled={isLoading}
               >
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700 ml-1">Confirm Password</label>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+                <Lock className="h-5 w-5" />
+              </div>
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full pl-11 pr-12 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-gray-50/50 focus:bg-white"
+                placeholder="••••••••"
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                disabled={isLoading}
+              >
+                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
           </div>

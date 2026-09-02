@@ -49,7 +49,10 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   return (
     <div 
       className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm transition-opacity"
-      onClick={handleBackdropClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        handleBackdropClick(e);
+      }}
     >
       <div 
         ref={modalRef}

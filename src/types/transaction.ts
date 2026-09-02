@@ -28,6 +28,7 @@ export type TransactionCategory = IncomeCategory | ExpenseCategory;
 export interface Transaction {
   id: string; // The frontend abstraction maps backend _id to id
   _id?: string; // Optional property to handle raw mongoose documents seamlessly
+  title?: string; // Optional for backward compatibility with old data
   type: TransactionType;
   amount: number;
   category: TransactionCategory;
