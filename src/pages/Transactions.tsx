@@ -8,6 +8,7 @@ import type { Transaction } from '../types';
 import { IncomeCategories, ExpenseCategories } from '../types';
 import TransactionCard from '../components/TransactionCard';
 import TransactionModal from '../components/TransactionModal';
+import CreateTransactionModal from '../components/CreateTransactionModal';
 import axios from 'axios';
 
 const Transactions: React.FC = () => {
@@ -15,6 +16,8 @@ const Transactions: React.FC = () => {
   
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -62,7 +65,7 @@ const Transactions: React.FC = () => {
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [search, type, category, sort]);
+  }, [search, type, category, sort, refreshTrigger]);
 
   const hasActiveFilters = search !== '' || type !== 'all' || category !== 'all' || sort !== 'newest';
 
@@ -105,7 +108,10 @@ const Transactions: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900">All Transactions</h1>
             <p className="text-gray-500 mt-1">Manage and view your financial history.</p>
           </div>
-          <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2">
+          <button 
+            onClick={() => setIsCreateModalOpen(true)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2"
+          >
             <Plus className="w-5 h-5" />
             New Transaction
           </button>
@@ -231,6 +237,14 @@ const Transactions: React.FC = () => {
         <TransactionModal 
           transaction={selectedTransaction} 
           onClose={() => setSelectedTransaction(null)} 
+        />
+      )}
+
+      {/* Create Transaction Modal */}
+      {isCreateModalOpen && (
+        <CreateTransactionModal 
+          onClose={() => setIsCreateModalOpen(false)}
+          onSuccess={() => setRefreshTrigger(prev => prev + 1)}
         />
       )}
     </div>

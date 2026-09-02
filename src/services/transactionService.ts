@@ -29,3 +29,16 @@ export const getTransactions = async (params?: GetTransactionsParams): Promise<T
   const response = await apiClient.get<Transaction[]>('/transactions', { params: cleanParams });
   return response.data;
 };
+
+export interface CreateTransactionData {
+  type: string;
+  category: string;
+  amount: number;
+  description?: string;
+  date: string;
+}
+
+export const createTransaction = async (data: CreateTransactionData): Promise<Transaction> => {
+  const response = await apiClient.post<Transaction>('/transactions', data);
+  return response.data;
+};
